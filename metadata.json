@@ -1,0 +1,6 @@
+{
+  "name": "StockPilot",
+  "description": "A production-grade Stock Portfolio Management System with AI-driven insights, live stock tracking, and advanced reporting features.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

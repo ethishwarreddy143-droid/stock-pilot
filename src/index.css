@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  /* Overriding default Slate color map for High Density Dark Mode */
+  --color-slate-50: #F8F9FA;
+  --color-slate-100: #F1F3F5;
+  --color-slate-200: #E1E4E8;
+  --color-slate-300: #CBD3DC;
+  --color-slate-400: #8E96A0;
+  --color-slate-500: #656D78;
+  --color-slate-600: #434A54;
+  --color-slate-700: #2C3139;
+  --color-slate-800: #1F2937;
+  --color-slate-850: #181D24;
+  --color-slate-900: #161A1E;
+  --color-slate-950: #0B0E11;
+
+  /* Shorter, sleeker border-radius definitions for layout density */
+  --radius-3xl: 0.75rem; /* 12px */
+  --radius-2xl: 0.625rem; /* 10px */
+  --radius-xl: 0.5rem; /* 8px */
+  --radius-lg: 0.375rem; /* 6px */
+  --radius-md: 0.25rem; /* 4px */
+  --radius-sm: 0.125rem; /* 2px */
+}
+
+/* Custom Thin Scrollbars for High Density Theme */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0B0E11;
+}
+::-webkit-scrollbar-thumb {
+  background: #2C3139;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2563EB;
+}
+
+/* Custom Keyframe Animations */
+@keyframes slide-in {
+  from {
+    transform: translateY(1rem);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes zoom-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-zoom-in {
+  animation: zoom-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Print utilities */
+@media print {
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+  aside, header, footer, .print\:hidden {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
+}
