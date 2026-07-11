@@ -1,7 +1,5 @@
-import { promises as fs } from "fs";
-import path from "path";
-
-const DB_FILE = path.join(process.cwd(), "server_db.json");
+// NOTE: This module uses a purely in-memory database for serverless compatibility (Netlify Functions).
+// Data is seeded from initialDb on first access and does not persist across cold starts.
 
 export interface User {
   id: string;
@@ -67,99 +65,94 @@ export interface DatabaseSchema {
   aiHistory: AIHistoryItem[];
 }
 
-const initialDb: DatabaseSchema = {
-  users: [
-    {
-      id: "admin-1",
-      email: "admin@stockpilot.com",
-      // sha256 hash for 'admin123' combined with salt
-      passwordHash: "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918", // 'admin123'
-      name: "StockPilot Admin",
-      role: "admin",
-      verified: true,
-      watchlist: ["AAPL", "MSFT", "GOOG", "TSLA", "NVDA"],
-      alerts: [
-        {
-          id: "alert-1",
-          type: "PRICE",
-          ticker: "AAPL",
-          targetPrice: 200,
-          condition: "ABOVE",
-          active: true,
-          message: "AAPL broke above $200 resistance level.",
-          date: new Date().toISOString()
-        }
-      ]
-    },
-    {
-      id: "user-1",
-      email: "demo@stockpilot.com",
-      passwordHash: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8", // 'password'
-      name: "Demo Investor",
-      role: "user",
-      verified: true,
-      watchlist: ["AAPL", "TSLA", "NVDA"],
-      alerts: []
-    }
-  ],
-  transactions: [
-    {
-      id: "tx-1",
-      userId: "user-1",
-      type: "BUY",
-      ticker: "AAPL",
-      shares: 10,
-      price: 175.50,
-      date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days ago
-    },
-    {
-      id: "tx-2",
-      userId: "user-1",
-      type: "BUY",
-      ticker: "TSLA",
-      shares: 15,
-      price: 220.00,
-      date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() // 15 days ago
-    },
-    {
-      id: "tx-3",
-      userId: "user-1",
-      type: "BUY",
-      ticker: "NVDA",
-      shares: 25,
-      price: 110.25,
-      date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() // 5 days ago
-    }
-  ],
-  feedbacks: [
-    {
-      id: "fb-1",
-      name: "Sarah Jenkins",
-      email: "sarah@gmail.com",
-      message: "The AI Portfolio Analyzer is incredible! Saved me hours of research.",
-      date: new Date().toISOString()
-    }
-  ],
-  aiHistory: []
-};
+function makeInitialDb(): DatabaseSchema {
+  return {
+    users: [
+      {
+        id: "admin-1",
+        email: "admin@stockpilot.com",
+        passwordHash: "8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918",
+        name: "StockPilot Admin",
+        role: "admin",
+        verified: true,
+        watchlist: ["AAPL", "MSFT", "GOOG", "TSLA", "NVDA"],
+        alerts: [
+          {
+            id: "alert-1",
+            type: "PRICE",
+            ticker: "AAPL",
+            targetPrice: 200,
+            condition: "ABOVE",
+            active: true,
+            message: "AAPL broke above $200 resistance level.",
+            date: new Date().toISOString()
+          }
+        ]
+      },
+      {
+        id: "user-1",
+        email: "demo@stockpilot.com",
+        passwordHash: "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
+        name: "Demo Investor",
+        role: "user",
+        verified: true,
+        watchlist: ["AAPL", "TSLA", "NVDA"],
+        alerts: []
+      }
+    ],
+    transactions: [
+      {
+        id: "tx-1",
+        userId: "user-1",
+        type: "BUY",
+        ticker: "AAPL",
+        shares: 10,
+        price: 175.50,
+        date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: "tx-2",
+        userId: "user-1",
+        type: "BUY",
+        ticker: "TSLA",
+        shares: 15,
+        price: 220.00,
+        date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString()
+      },
+      {
+        id: "tx-3",
+        userId: "user-1",
+        type: "BUY",
+        ticker: "NVDA",
+        shares: 25,
+        price: 110.25,
+        date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString()
+      }
+    ],
+    feedbacks: [
+      {
+        id: "fb-1",
+        name: "Sarah Jenkins",
+        email: "sarah@gmail.com",
+        message: "The AI Portfolio Analyzer is incredible! Saved me hours of research.",
+        date: new Date().toISOString()
+      }
+    ],
+    aiHistory: []
+  };
+}
 
+// In-memory DB — shared within a single function invocation
 let dbCache: DatabaseSchema | null = null;
 
 export async function getDb(): Promise<DatabaseSchema> {
-  if (dbCache) return dbCache;
-  try {
-    const data = await fs.readFile(DB_FILE, "utf-8");
-    dbCache = JSON.parse(data);
-    return dbCache!;
-  } catch (err) {
-    // If doesn't exist, create it
-    await saveDb(initialDb);
-    dbCache = initialDb;
-    return dbCache;
+  if (!dbCache) {
+    dbCache = makeInitialDb();
   }
+  return dbCache;
 }
 
 export async function saveDb(data: DatabaseSchema): Promise<void> {
+  // In serverless mode, just update the in-memory cache (no filesystem writes)
   dbCache = data;
-  await fs.writeFile(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
 }
